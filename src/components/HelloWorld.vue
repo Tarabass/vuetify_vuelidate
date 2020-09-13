@@ -58,7 +58,16 @@ export default {
   mixins: [validationMixin],
 
   validations: {
-    terminal: { required, minLength: minLength(3) },
+    terminal: {
+      required,
+      minLength: minLength(3),
+      async isUnique (value) {
+        if (value === '') return true
+
+        const data = await this.getTerminals()
+        return Boolean(data.terminals.indexOf(value) < 0)
+      }
+    },
     name: { required, maxLength: maxLength(10) },
     email: { required, email },
     select: { required },
@@ -101,6 +110,8 @@ export default {
       if (!this.$v.terminal.$dirty) return errors
       !this.$v.terminal.minLength && errors.push('Terminal must be at least 3 characters long')
       !this.$v.terminal.required && errors.push('Terminal is required.')
+      !this.$v.terminal.isUnique && errors.push('Terminal must be unique.')
+
       return errors
     },
     nameErrors () {
@@ -136,6 +147,10 @@ export default {
       this.email = ''
       this.select = null
       this.checkbox = false
+    },
+    async getTerminals () {
+      const response = await fetch('./api/terminals.json', {})
+      return await response.json()
     }
   }
 }
