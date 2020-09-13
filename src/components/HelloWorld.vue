@@ -1,6 +1,14 @@
 <template>
   <form>
     <v-text-field
+      v-model="terminal"
+      :error-messages="terminalErrors"
+      label="Terminal"
+      required
+      @input="delayTouch($v.terminal)"
+      @blur="$v.terminal.$touch()"
+    ></v-text-field>
+    <v-text-field
       v-model="name"
       :error-messages="nameErrors"
       :counter="10"
@@ -42,12 +50,15 @@
 
 <script>
 import { validationMixin } from 'vuelidate'
-import { required, maxLength, email } from 'vuelidate/lib/validators'
+import { required, maxLength, minLength, email } from 'vuelidate/lib/validators'
+
+const touchMap = new WeakMap()
 
 export default {
   mixins: [validationMixin],
 
   validations: {
+    terminal: { required, minLength: minLength(3) },
     name: { required, maxLength: maxLength(10) },
     email: { required, email },
     select: { required },
@@ -59,6 +70,7 @@ export default {
   },
 
   data: () => ({
+    terminal: '',
     name: '',
     email: '',
     select: null,
@@ -84,6 +96,13 @@ export default {
       !this.$v.select.required && errors.push('Item is required')
       return errors
     },
+    terminalErrors () {
+      const errors = []
+      if (!this.$v.terminal.$dirty) return errors
+      !this.$v.terminal.minLength && errors.push('Terminal must be at least 3 characters long')
+      !this.$v.terminal.required && errors.push('Terminal is required.')
+      return errors
+    },
     nameErrors () {
       const errors = []
       if (!this.$v.name.$dirty) return errors
@@ -101,6 +120,13 @@ export default {
   },
 
   methods: {
+    delayTouch ($v) {
+      $v.$reset()
+      if (touchMap.has($v)) {
+        clearTimeout(touchMap.get($v))
+      }
+      touchMap.set($v, setTimeout($v.$touch, 1000))
+    },
     submit () {
       this.$v.$touch()
     },
