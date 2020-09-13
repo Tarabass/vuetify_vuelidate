@@ -1,5 +1,5 @@
 <template>
-  <form>
+  <form style="width: 300px; margin: 50px auto 0">
     <v-text-field
       v-model="terminal"
       :error-messages="terminalErrors"
@@ -143,6 +143,7 @@ export default {
     },
     clear () {
       this.$v.$reset()
+      this.terminal = ''
       this.name = ''
       this.email = ''
       this.select = null
